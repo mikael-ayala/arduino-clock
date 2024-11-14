@@ -15,6 +15,7 @@ int distance, horaDefinida, minutoDefinido, segundoDefinido;
 int contadorLed = 0;
 int contadorLed2 = 0;
 int primeiroDigito;
+bool alarmeSetado = true;
 String hora, minuto;
 
 bool alarmeLigado = false;
@@ -70,6 +71,9 @@ void loop()
 {
   currentMillis = millis();
 
+  lcd.setCursor(13, 1);
+  alarmeSetado ? lcd.print("L") : lcd.print("D");
+
   char customKey = customKeypad.getKey();
   
   if (customKey) { 
@@ -78,14 +82,19 @@ void loop()
     if (customKey == '*') {
       lcd.clear();
       contadorLed = 0;
+      hora = "";
+      minuto = "";
+      horaDefinida = 0;
+      minutoDefinido = 0;
+    }
+
+    if (customKey == '#') {
+      alarmeSetado = !alarmeSetado;
     }
     
     Serial.print(customKey);
-    if (contadorLed < 5 && customKey != '*') {
+    if (contadorLed < 5 && customKey != '*' && customKey != '#') {
       lcd.setCursor(contadorLed++, 1);
-
-      Serial.print("POSICAO");
-      Serial.print(contadorLed);
 
       if (contadorLed == 1 && num < 3) {
         hora += customKey;
@@ -152,7 +161,7 @@ void loop()
 
     distance = ultrasonic.read();
 
-    if (now.hour() == horaDefinida && now.minute() == minutoDefinido && now.second() == segundoDefinido) {
+    if (now.hour() == horaDefinida && now.minute() == minutoDefinido && now.second() == segundoDefinido && alarmeSetado) {
       ligarAlarme();
     }
 
@@ -164,8 +173,13 @@ void ligarAlarme() {
   alarmeLigado = true;
 
   while (alarmeLigado) {
-    tone(BUZZER, 262);
+    currentMillis = millis();
 
+    if (currentMillis - startMillis >= 2000) {
+      tone(BUZZER, 262, 1000);
+      startMillis = currentMillis; 
+    }
+    
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("ALARME");
@@ -175,6 +189,7 @@ void ligarAlarme() {
     distance = ultrasonic.read();
     if (distance < 30) {
       alarmeLigado = false;
+      lcd.clear();
     }
   }
 }
