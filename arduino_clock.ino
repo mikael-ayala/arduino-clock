@@ -13,6 +13,8 @@ RTC_DS3231 rtc;
 
 int distance, horaDefinida, minutoDefinido, segundoDefinido;
 int contadorLed = 0;
+int contadorLed2 = 0;
+int primeiroDigito;
 String hora, minuto;
 
 bool alarmeLigado = false;
@@ -70,37 +72,63 @@ void loop()
 
   char customKey = customKeypad.getKey();
   
-  if (customKey) {
-    if (customKey == '#') {
-      Serial.print(customKey);
-      setarAlarme = true;
-    } else if (setarAlarme) {
-      Serial.print(customKey);
-      if (contadorLed < 5) {
+  if (customKey) { 
+    int num = customKey - '0';
+
+    if (customKey == '*') {
+      lcd.clear();
+      contadorLed = 0;
+    }
+    
+    Serial.print(customKey);
+    if (contadorLed < 5 && customKey != '*') {
+      lcd.setCursor(contadorLed++, 1);
+
+      Serial.print("POSICAO");
+      Serial.print(contadorLed);
+
+      if (contadorLed == 1 && num < 3) {
+        hora += customKey;
+        lcd.print(customKey);
+        primeiroDigito = num;
+      }
+      
+      if (contadorLed == 2) {
+        if (primeiroDigito == 2 && num < 4) {
+          hora += customKey;
+          lcd.print(customKey);
+        } else if (primeiroDigito < 2) {
+          hora += customKey;
+          lcd.print(customKey);
+        } else {
+          contadorLed--;
+        }
+      }
+
+      if (contadorLed == 2) {
         lcd.setCursor(contadorLed++, 1);
+        lcd.print(":");
+      }
+
+      if (contadorLed == 4) {
+        if (num < 6) {
+          minuto += customKey;
+          lcd.print(customKey);
+        } else {
+          contadorLed--;
+        }
+      }
+
+      if (contadorLed == 5) {
+        minuto += customKey;
         lcd.print(customKey);
 
-        if (contadorLed < 3) {
-          hora += customKey;
-        }
-        
-        if (contadorLed == 2) {
-          lcd.setCursor(contadorLed++, 1);
-          lcd.print(":");
-        }
+        horaDefinida = hora.toInt();
+        minutoDefinido = minuto.toInt();
 
-        if (contadorLed > 3) {
-          minuto += customKey;
-        }
-
-        if (contadorLed == 5) {
-          horaDefinida = hora.toInt();
-          minutoDefinido = minuto.toInt();
-
-          Serial.print("HORARIO DEFINIDO");
-          Serial.print(horaDefinida);
-          Serial.print(minutoDefinido);
-        }
+        Serial.print("HORARIO DEFINIDO");
+        Serial.print(horaDefinida);
+        Serial.print(minutoDefinido);
       }
     }
   }
