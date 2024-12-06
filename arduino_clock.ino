@@ -28,17 +28,17 @@ unsigned long currentMillis = 0;
 const unsigned long PERIOD = 1000;
 
 const byte ROWS = 4; 
-const byte COLS = 3;
+const byte COLS = 4;
 
 char hexaKeys[ROWS][COLS] = {
-  {'1', '2', '3'},
-  {'4', '5', '6'},
-  {'7', '8', '9'},
-  {'*', '0', '#'}
+  {'1', '2', '3', 'A'},
+  {'4', '5', '6', 'B'},
+  {'7', '8', '9', 'C'},
+  {'*', '0', '#', 'D'},
 };
 
 byte rowPins[ROWS] = {13, 12, 11, 10}; 
-byte colPins[COLS] = {9, 8, 7};
+byte colPins[COLS] = {9, 8, 7, 6};
 
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
  
@@ -72,12 +72,13 @@ void loop()
   currentMillis = millis();
 
   lcd.setCursor(13, 1);
-  alarmeSetado ? lcd.print("L") : lcd.print("D");
+  alarmeSetado ? lcd.print("ON ") : lcd.print("OFF");
 
   char customKey = customKeypad.getKey();
   
   if (customKey) { 
     int num = customKey - '0';
+    Serial.print(customKey);
 
     if (customKey == '*') {
       lcd.clear();
@@ -93,7 +94,7 @@ void loop()
     }
     
     Serial.print(customKey);
-    if (contadorLed < 5 && customKey != '*' && customKey != '#') {
+    if (contadorLed < 5 && customKey != '*' && customKey != '#' && customKey != 'A' && customKey != 'B' && customKey != 'C' && customKey != 'D') {
       lcd.setCursor(contadorLed++, 1);
 
       if (contadorLed == 1 && num < 3) {
@@ -183,13 +184,19 @@ void ligarAlarme() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("ALARME");
-    lcd.setCursor(0, 1);
-    lcd.print("APROXIME A MÃO PARA DESLIGAR");
+    //lcd.setCursor(0, 1);
+    //lcd.print("APROXIME A MÃO PARA DESLIGAR");
 
     distance = ultrasonic.read();
     if (distance < 30) {
       alarmeLigado = false;
-      lcd.clear();
+      lcd.setCursor(0, 1);
+      lcd.print(horaDefinida);
+      lcd.setCursor(2, 1);
+      lcd.print(":");
+      lcd.setCursor(3, 1);
+      lcd.print(minutoDefinido);
+      //lcd.clear();
     }
   }
 }
